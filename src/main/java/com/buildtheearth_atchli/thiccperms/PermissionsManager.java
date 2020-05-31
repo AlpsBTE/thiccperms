@@ -19,6 +19,7 @@ import net.minecraftforge.server.permission.IPermissionHandler;
 import net.minecraftforge.server.permission.context.IContext;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -109,7 +110,16 @@ public class PermissionsManager implements IPermissionHandler {
         CommandHandler ch = (CommandHandler) server.getCommandManager();
 
         // Remove all the commands we are about to wrap.
-        Set<ICommand> commandSet = ch.commandSet;
+        Set<ICommand> commandSet;
+        try {
+            Field field = CommandHandler.class.getDeclaredField("commandSet");
+            field.setAccessible(true);
+            commandSet = (Set<ICommand>) field.get(ch);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+            System.exit(1);
+            return;
+        }
         commandSet.removeAll(toWrap.values());
 
         Map<String, ICommand> wrappers = Maps.newHashMap();
